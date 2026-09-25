@@ -34,6 +34,7 @@ DEFAULT_POSITION = 50.0
 LANDSCAPE_RATIO = 1.1                # wider than tall by this much = a spread
 LARGE_PAGE_COUNT = 500
 OUTPUT_SUFFIX = "_split"
+PRODUCER = "scan-pdf-split (PyMuPDF)"
 
 # Gutter detection works on a gray render this many pixels wide, whatever the
 # page size, so a poster costs no more memory than a paperback.
@@ -461,6 +462,9 @@ def _keep_annots(doc: pymupdf.Document, xref: int, box: tuple[float, float, floa
         rect = _read_box(doc, ref, "Rect")
         if rect is None or (rect[0] < box[2] and rect[2] > box[0] and rect[1] < box[3] and rect[3] > box[1]):
             keep.append(ref)
+            # /P is optional but form fields are looked up through it, and a
+            # copied page's annotations would otherwise point at nothing
+            doc.xref_set_key(ref, "P", f"{xref} 0 R")
     doc.xref_set_key(xref, "Annots", "[" + " ".join(f"{r} 0 R" for r in keep) + "]" if keep else "null")
 
 
@@ -670,13 +674,15 @@ def process_pdf(
 
 
 def _restore_metadata(doc: pymupdf.Document, out: pymupdf.Document, plans: list[PagePlan]) -> None:
+    # set_metadata replaces every field, so producer has to be named here or
+    # the result ends up with no producer at all
     meta = {k: v for k, v in (doc.metadata or {}).items()
             if k in ("title", "author", "subject", "keywords", "creator") and v}
-    if meta:
-        try:
-            out.set_metadata(meta)
-        except Exception as exc:
-            log.info("metadata not copied: %s", exc)
+    meta["producer"] = PRODUCER
+    try:
+        out.set_metadata(meta)
+    except Exception as exc:
+        log.info("metadata not copied: %s", exc)
     try:
         toc = doc.get_toc(simple=True)
     except Exception:
