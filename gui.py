@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import dataclasses
+import math
 import os
 import subprocess
 import sys
@@ -25,6 +26,9 @@ except Exception:  # pragma: no cover - optional dependency
     _HAS_DND = False
 
 PREVIEW_W, PREVIEW_H = 640, 460
+WINDOW_SIZE = (1120, 800)            # client area, when the screen has room for it
+MIN_SIZE = (960, 540)                # narrower cuts the page-navigation row
+FRAME_W, FRAME_H = 16, 40            # window borders and title bar around the client area
 LINE_COLOR = "#e5484d"
 POSITION_SLIDER = (30.0, 70.0)       # the slider; the CLI accepts split.POSITION_RANGE
 DEFAULT_PAGE_SECONDS = 0.02          # used for the large-file estimate before any preview
@@ -57,8 +61,6 @@ def _saved_options(settings: dict) -> Options:
 class App:
     def __init__(self, initial_files: list[str] | None = None) -> None:
         self.root = TkinterDnD.Tk() if _HAS_DND else tk.Tk()
-        self.root.geometry("1120x800")
-        self.root.minsize(960, 680)
 
         self.files: list[str] = []
         self.passwords: dict[str, str] = {}
@@ -96,6 +98,7 @@ class App:
 
         self._build()
         self._apply_texts()
+        self._fit_to_screen()
         self.root.protocol("WM_DELETE_WINDOW", self._on_close)
         if initial_files:
             self.root.after(100, lambda: self.add_paths(initial_files))
@@ -153,8 +156,23 @@ class App:
         mid.columnconfigure(1, weight=1)
         mid.rowconfigure(0, weight=1)
 
-        opts = ttk.Frame(mid, width=250)
-        opts.grid(row=0, column=0, sticky="nsw", padx=(0, 12))
+        # The options column scrolls when the window is too short for it
+        # (a 1080p laptop at 150% leaves about 650px), so no control is ever
+        # cut off; at the default size it fits and no scrollbar shows.
+        col = ttk.Frame(mid)
+        col.grid(row=0, column=0, sticky="nsw", padx=(0, 12))
+        col.rowconfigure(0, weight=1)
+        bg = ttk.Style().lookup("TFrame", "background") or root.cget("bg")
+        self.cv_opts = tk.Canvas(col, highlightthickness=0, borderwidth=0, background=bg)
+        self.cv_opts.grid(row=0, column=0, sticky="ns")
+        self.sb_opts = ttk.Scrollbar(col, orient="vertical", command=self.cv_opts.yview)
+        self.cv_opts.configure(yscrollcommand=self.sb_opts.set)
+        opts = ttk.Frame(self.cv_opts)
+        self.frm_opts = opts
+        self.cv_opts.create_window(0, 0, window=opts, anchor="nw")
+        opts.bind("<Configure>", lambda e: self._fit_options())
+        self.cv_opts.bind("<Configure>", lambda e: self._fit_options())
+        root.bind_all("<MouseWheel>", self._on_options_wheel, add="+")
 
         f_dir = self._reg(ttk.LabelFrame(opts, padding=6), "opt_direction")
         f_dir.pack(fill="x", pady=(0, 6))
@@ -197,9 +215,6 @@ class App:
         self._reg(self.lbl_overlap_hint, "lbl_overlap_hint")
         self.lbl_overlap_hint.grid(row=1, column=0, columnspan=2, sticky="w", pady=(4, 0))
 
-        self.lbl_count = ttk.Label(opts, font=("", 10, "bold"))
-        self.lbl_count.pack(anchor="w", pady=(4, 0))
-
         # preview
         prev = ttk.Frame(mid)
         prev.grid(row=0, column=1, sticky="nsew")
@@ -233,8 +248,12 @@ class App:
         self.cv_res.grid(row=2, column=1, sticky="nsew", padx=(4, 0))
         self.lbl_line = ttk.Label(prev, anchor="w", foreground="#555")
         self.lbl_line.grid(row=3, column=0, sticky="ew", pady=(4, 0))
-        self.lbl_preview_msg = ttk.Label(prev, anchor="e", foreground="#555")
-        self.lbl_preview_msg.grid(row=3, column=1, sticky="ew", pady=(4, 0))
+        foot = ttk.Frame(prev)
+        foot.grid(row=3, column=1, sticky="ew", pady=(4, 0))
+        self.lbl_count = ttk.Label(foot, font=("", 10, "bold"))
+        self.lbl_count.pack(side="left")
+        self.lbl_preview_msg = ttk.Label(foot, anchor="e", foreground="#555")
+        self.lbl_preview_msg.pack(side="right")
         self.cv_orig.bind("<Configure>", lambda e: self._redraw_preview())
         self.cv_res.bind("<Configure>", lambda e: self._redraw_preview())
         self.cv_orig.bind("<ButtonPress-1>", self._on_line_press)
@@ -319,6 +338,56 @@ class App:
         if index >= 0:
             i18n.set_lang(i18n.LANGS[index])
         self._apply_texts()
+
+    def _fit_options(self) -> None:
+        """Size the options canvas to its content's width; show the
+        scrollbar only when the content is taller than the space."""
+        opts, cv = self.frm_opts, self.cv_opts
+        width = opts.winfo_reqwidth()
+        if int(cv.cget("width")) != width:
+            cv.configure(width=width)
+        cv.configure(scrollregion=(0, 0, width, opts.winfo_reqheight()))
+        if opts.winfo_reqheight() > cv.winfo_height() + 1:
+            if not self.sb_opts.winfo_ismapped():
+                self.sb_opts.grid(row=0, column=1, sticky="ns", padx=(2, 0))
+        elif self.sb_opts.winfo_ismapped():
+            self.sb_opts.grid_remove()
+            cv.yview_moveto(0)
+
+    def _on_options_wheel(self, event) -> None:
+        if not self.sb_opts.winfo_ismapped():
+            return
+        try:
+            widget = self.root.winfo_containing(event.x_root, event.y_root)
+        except (KeyError, tk.TclError):      # e.g. over a combobox's own popdown list
+            return
+        while widget is not None and widget is not self.cv_opts:
+            widget = widget.master
+        if widget is self.cv_opts:
+            self.cv_opts.yview_scroll(-1 if event.delta > 0 else 1, "units")
+
+    def _fit_to_screen(self) -> None:
+        """Open at the default size, or smaller if the screen's work area
+        (taskbar excluded) cannot hold it, so the bottom row stays visible."""
+        left, top = 0, 0
+        right, bottom = self.root.winfo_screenwidth(), self.root.winfo_screenheight() - 48
+        if sys.platform == "win32":
+            try:
+                import ctypes
+                from ctypes import wintypes
+
+                rect = wintypes.RECT()
+                if ctypes.windll.user32.SystemParametersInfoW(0x0030, 0, ctypes.byref(rect), 0):  # SPI_GETWORKAREA
+                    left, top, right, bottom = rect.left, rect.top, rect.right, rect.bottom
+            except Exception:
+                pass
+        # room for the title bar and borders around the client area
+        avail_w, avail_h = right - left - FRAME_W, bottom - top - FRAME_H
+        w, h = min(WINDOW_SIZE[0], avail_w), min(WINDOW_SIZE[1], avail_h)
+        x = left + max(0, (avail_w - w) // 2)
+        y = top + max(0, (avail_h - h) // 2)
+        self.root.geometry(f"{w}x{h}+{x}+{y}")
+        self.root.minsize(min(MIN_SIZE[0], w), min(MIN_SIZE[1], h))
 
     def _update_value_labels(self) -> None:
         self.lbl_position.configure(text=f"{self.var_position.get():.1f}%")
@@ -694,9 +763,11 @@ class App:
         for path in self.files:
             pages = self.page_counts[path]
             if pages >= split.LARGE_PAGE_COUNT:
-                minutes = max(1, int(round(pages * per_page / 60)))
-                if not messagebox.askyesno(t("dlg_confirm"), t("msg_large_file", name=os.path.basename(path),
-                                                                pages=pages, minutes=minutes), parent=self.root):
+                seconds = pages * per_page
+                name = os.path.basename(path)
+                msg = (t("msg_large_file", name=name, pages=pages, minutes=math.ceil(seconds / 60)) if seconds >= 60
+                       else t("msg_large_file_quick", name=name, pages=pages))
+                if not messagebox.askyesno(t("dlg_confirm"), msg, parent=self.root):
                     return
         self.cancel_event.clear()
         self.outputs = []

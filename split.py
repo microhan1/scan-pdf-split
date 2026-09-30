@@ -25,6 +25,11 @@ from PIL import Image
 
 log = logging.getLogger("scan_pdf_split")
 
+# MuPDF prints its own "MuPDF error: ..." lines for damaged files. Every
+# failure is reported here in the user's language, so keep the console clean.
+pymupdf.TOOLS.mupdf_display_errors(False)
+pymupdf.TOOLS.mupdf_display_warnings(False)
+
 DIRECTIONS = ("ltr", "rtl")          # which half comes first
 SELECTS = ("auto", "all", "none")    # which pages are split by default
 PAGE_MODES = ("split", "whole", "skip")

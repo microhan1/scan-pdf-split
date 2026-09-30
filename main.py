@@ -66,6 +66,14 @@ def _localize_argparse() -> None:
         "positional arguments": t("cli_positional"),
         "options": t("cli_options"),
         "show this help message and exit": t("cli_help"),
+        # error messages (exit code 2); argparse fills in the %-placeholders
+        "%(prog)s: error: %(message)s\n": t("cli_err_prefix"),
+        "argument %(argument_name)s: %(message)s": t("cli_err_argument"),
+        "invalid %(type)s value: %(value)r": t("cli_err_invalid_value"),
+        "invalid choice: %(value)r (choose from %(choices)s)": t("cli_err_invalid_choice"),
+        "not allowed with argument %s": t("cli_err_not_allowed"),
+        "unrecognized arguments: %s": t("cli_err_unrecognized"),
+        "expected one argument": t("cli_err_expected_one"),
     }
     argparse._ = lambda s: table.get(s, s)  # type: ignore[attr-defined]
 
@@ -135,9 +143,13 @@ def run_cli(args: argparse.Namespace) -> int:
             failures += 1
             continue
         if not scanned and not args.yes:
-            answer = (_ask(f"{name}: {t('warn_text_pdf')}{t('cli_confirm_hint')}") or "").strip().lower()
-            if answer not in ("y", "yes"):
+            answer = _ask(f"{name}: {t('warn_text_pdf')}{t('cli_confirm_hint')}")
+            if (answer or "").strip().lower() not in ("y", "yes"):
                 print(t("log_skipped", name=name))
+                # nobody could answer (a scheduled job, a pipe): the file was
+                # not done, as with a password nobody could type
+                if answer is None:
+                    failures += 1
                 continue
         print(t("cli_processing", index=idx, total=len(files), name=name, pages=pages))
 
