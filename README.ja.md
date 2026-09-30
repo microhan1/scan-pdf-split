@@ -55,4 +55,4 @@ python main.py book.pdf --no-auto --position 52
 
 MIT。[LICENSE](LICENSE) を参照してください。
 
-配布している exe には AGPL-3.0 ライセンスの [PyMuPDF](https://github.com/pymupdf/PyMuPDF) が含まれています。exe のソースはこのリポジトリです。
+配布している exe には AGPL-3.0 ライセンスの [PyMuPDF](https://github.com/pymupdf/PyMuPDF) が含まれています。exe のソースはこのリポジトリです。同梱コンポーネントとライセンス全文は [THIRD_PARTY_LICENSES.txt](THIRD_PARTY_LICENSES.txt) にあります。

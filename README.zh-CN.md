@@ -55,4 +55,4 @@ python main.py book.pdf --no-auto --position 52
 
 MIT。详见 [LICENSE](LICENSE)。
 
-发布的 exe 包含 AGPL-3.0 许可的 [PyMuPDF](https://github.com/pymupdf/PyMuPDF)。exe 的源代码即本仓库。
+发布的 exe 包含 AGPL-3.0 许可的 [PyMuPDF](https://github.com/pymupdf/PyMuPDF)。exe 的源代码即本仓库。所含组件及其许可证全文见 [THIRD_PARTY_LICENSES.txt](THIRD_PARTY_LICENSES.txt)。

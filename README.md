@@ -55,4 +55,4 @@ python main.py book.pdf --no-auto --position 52
 
 MIT. [LICENSE](LICENSE) 참조.
 
-배포하는 exe에는 AGPL-3.0 라이선스인 [PyMuPDF](https://github.com/pymupdf/PyMuPDF)가 포함되어 있습니다. exe의 소스는 이 저장소입니다.
+배포하는 exe에는 AGPL-3.0 라이선스인 [PyMuPDF](https://github.com/pymupdf/PyMuPDF)가 포함되어 있습니다. exe의 소스는 이 저장소입니다. 포함된 구성 요소와 라이선스 전문은 [THIRD_PARTY_LICENSES.txt](THIRD_PARTY_LICENSES.txt)에 있습니다.

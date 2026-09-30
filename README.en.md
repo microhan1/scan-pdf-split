@@ -55,4 +55,4 @@ python main.py book.pdf --no-auto --position 52
 
 MIT. See [LICENSE](LICENSE).
 
-The released exe bundles [PyMuPDF](https://github.com/pymupdf/PyMuPDF), which is licensed under AGPL-3.0. The source of the exe is this repository.
+The released exe bundles [PyMuPDF](https://github.com/pymupdf/PyMuPDF), which is licensed under AGPL-3.0. The source of the exe is this repository. The bundled components and their full license texts are in [THIRD_PARTY_LICENSES.txt](THIRD_PARTY_LICENSES.txt).
