@@ -18,6 +18,8 @@ python main.py
 
 ## 使用方法
 
+![程序界面](docs/gui_zh-CN.png)
+
 1. 把 PDF 文件或文件夹拖到窗口中。
 2. 一边看预览一边调整选项（阅读方向 · 要拆分的页 · 自动对齐装订线 · 中间重叠）。可以逐页翻看，拖动红色分割线，或把某页设为拆分 / 整页 / 排除。
 3. 点击 **开始**，原文件旁会生成 `<原文件名>_split.pdf`。
@@ -52,3 +54,5 @@ python main.py book.pdf --no-auto --position 52
 ## 许可证
 
 MIT。详见 [LICENSE](LICENSE)。
+
+发布的 exe 包含 AGPL-3.0 许可的 [PyMuPDF](https://github.com/pymupdf/PyMuPDF)。exe 的源代码即本仓库。

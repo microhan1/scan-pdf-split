@@ -18,6 +18,8 @@ python main.py
 
 ## 사용법
 
+![프로그램 화면](docs/gui_ko.png)
+
 1. PDF 파일이나 폴더를 창에 끌어다 놓습니다.
 2. 미리보기를 보며 옵션을 조정합니다 (읽기 방향 · 나눌 쪽 · 분할선 자동 맞춤 · 가운데 겹침). 쪽을 넘기며 빨간 분할선을 끌거나, 쪽마다 나누기/통째로/빼기를 고를 수 있습니다.
 3. **실행**을 누르면 원본 옆에 `<원본명>_split.pdf`가 만들어집니다.
@@ -52,3 +54,5 @@ python main.py book.pdf --no-auto --position 52
 ## 라이선스
 
 MIT. [LICENSE](LICENSE) 참조.
+
+배포하는 exe에는 AGPL-3.0 라이선스인 [PyMuPDF](https://github.com/pymupdf/PyMuPDF)가 포함되어 있습니다. exe의 소스는 이 저장소입니다.

@@ -18,6 +18,8 @@ python main.py
 
 ## Usage
 
+![The program window](docs/gui_en.png)
+
 1. Drop PDF files or a folder onto the window.
 2. Adjust the options while watching the preview (reading order · pages to split · automatic gutter fitting · center overlap). Step through the pages to drag the red split line, or to set a page to Split, Whole or Skip.
 3. Press **Run**. `<name>_split.pdf` is written next to the original.
@@ -52,3 +54,5 @@ python main.py book.pdf --no-auto --position 52
 ## License
 
 MIT. See [LICENSE](LICENSE).
+
+The released exe bundles [PyMuPDF](https://github.com/pymupdf/PyMuPDF), which is licensed under AGPL-3.0. The source of the exe is this repository.
