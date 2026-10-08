@@ -49,7 +49,7 @@ python main.py book.pdf --no-auto --position 52
 
 - 书签工具：[扫描PDF清晰化](https://github.com/microhan1/scan-pdf-cleanup) · [边距裁剪](https://github.com/microhan1/TrimPDF)
 - 无需安装、在浏览器中使用的网页版：[跨页拆分](https://microhan1.github.io/spread-split/)
-- [书签图书馆（Chaekgalpi Library）](https://chaekgalpi.co.kr/?utm_source=github&utm_medium=referral&utm_campaign=tool_cta&utm_content=scanpdfsplit) — 记录读过的书和读书笔记的网页服务（仅韩语）
+- [书签图书馆（Chaekgalpi Library）](https://chaekgalpi.co.kr/tools/scanpdfsplit?utm_source=github&utm_medium=referral&utm_campaign=tool_cta&utm_content=scanpdfsplit) — 记录读过的书和读书笔记的网页服务（仅韩语）
 
 ## 许可证
 
