@@ -47,9 +47,9 @@ python main.py book.pdf --no-auto --position 52
 
 ## シリーズ
 
-- しおりツール：[スキャンPDF補正](https://github.com/microhan1/scan-pdf-cleanup) · [余白カット](https://github.com/microhan1/scan-pdf-crop)
+- しおりツール：[スキャンPDF補正](https://github.com/microhan1/scan-pdf-cleanup) · [余白カット](https://github.com/microhan1/TrimPDF)
 - インストール不要、ブラウザーで使える Web 版：[見開き分割](https://microhan1.github.io/spread-split/)
-- [しおりライブラリ（Chaekgalpi Library）](https://github.com/microhan1/chaekgalpi)
+- [しおりライブラリ（Chaekgalpi Library）](https://chaekgalpi.co.kr/?utm_source=github&utm_medium=referral&utm_campaign=tool_cta&utm_content=scanpdfsplit) — 読んだ本と読書記録を残すウェブサービス（韓国語のみ）
 
 ## ライセンス
 

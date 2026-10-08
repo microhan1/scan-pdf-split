@@ -47,9 +47,9 @@ python main.py book.pdf --no-auto --position 52
 
 ## Series
 
-- Chaekgalpi Tools: [Scan PDF Cleanup](https://github.com/microhan1/scan-pdf-cleanup) · [Margin Crop](https://github.com/microhan1/scan-pdf-crop)
+- Chaekgalpi Tools: [Scan PDF Cleanup](https://github.com/microhan1/scan-pdf-cleanup) · [Margin Crop](https://github.com/microhan1/TrimPDF)
 - Browser version, nothing to install: [Spread Split](https://microhan1.github.io/spread-split/)
-- [Chaekgalpi Library](https://github.com/microhan1/chaekgalpi)
+- [Chaekgalpi Library](https://chaekgalpi.co.kr/?utm_source=github&utm_medium=referral&utm_campaign=tool_cta&utm_content=scanpdfsplit) — a web service for logging the books you read and writing reviews (Korean only)
 
 ## License
 

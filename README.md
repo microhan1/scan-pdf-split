@@ -47,9 +47,9 @@ python main.py book.pdf --no-auto --position 52
 
 ## 시리즈
 
-- 책갈피 툴: [스캔 PDF 보정](https://github.com/microhan1/scan-pdf-cleanup) · [여백 자르기](https://github.com/microhan1/scan-pdf-crop)
+- 책갈피 툴: [스캔 PDF 보정](https://github.com/microhan1/scan-pdf-cleanup) · [여백 자르기](https://github.com/microhan1/TrimPDF)
 - 설치 없이 브라우저에서 쓰는 웹판: [펼침면 나누기](https://microhan1.github.io/spread-split/)
-- [책갈피 라이브러리](https://github.com/microhan1/chaekgalpi)
+- [책갈피 라이브러리](https://chaekgalpi.co.kr/?utm_source=github&utm_medium=referral&utm_campaign=tool_cta&utm_content=scanpdfsplit) — 읽은 책과 독서록을 기록하는 웹 서비스. 정리한 책을 다 읽으면 한 줄 남겨 보세요.
 
 ## 라이선스
 
