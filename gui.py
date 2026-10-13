@@ -9,13 +9,16 @@ import sys
 import threading
 import time
 import tkinter as tk
+import webbrowser
 from tkinter import filedialog, messagebox, simpledialog, ttk
 
 from PIL import Image, ImageTk
 
 import i18n
 import split
+import update_check
 from i18n import t
+from version import APP_VERSION
 from split import Options
 
 try:
@@ -30,6 +33,7 @@ WINDOW_SIZE = (1120, 800)            # client area, when the screen has room for
 MIN_SIZE = (960, 540)                # narrower cuts the page-navigation row
 FRAME_W, FRAME_H = 16, 40            # window borders and title bar around the client area
 LINE_COLOR = "#e5484d"
+UPDATE_BG, UPDATE_BORDER = "#eff6ff", "#bfdbfe"   # the new-version notice line
 POSITION_SLIDER = (30.0, 70.0)       # the slider; the CLI accepts split.POSITION_RANGE
 DEFAULT_PAGE_SECONDS = 0.02          # used for the large-file estimate before any preview
 
@@ -95,11 +99,16 @@ class App:
         self.var_auto = tk.BooleanVar(value=saved.auto_detect)
         self.var_page_mode = tk.StringVar(value="")
         self.var_lang = tk.StringVar(value=i18n.LANG_NAMES[i18n.current_lang()])
+        self.update_prefs = update_check.prefs_from_settings(i18n.load_settings())
+        self.var_update_check = tk.BooleanVar(value=self.update_prefs.update_check)
+        self._update_info: update_check.UpdateInfo | None = None
 
         self._build()
         self._apply_texts()
         self._fit_to_screen()
         self.root.protocol("WM_DELETE_WINDOW", self._on_close)
+        # once a day, 1.5 s after the window is up, on a background thread; silent on any failure
+        update_check.check_async(self.root, update_check.SLUG, APP_VERSION, self.update_prefs, self._on_update_result)
         if initial_files:
             self.root.after(100, lambda: self.add_paths(initial_files))
 
@@ -125,6 +134,9 @@ class App:
         )
         self.cmb_lang.grid(row=0, column=2)
         self.cmb_lang.bind("<<ComboboxSelected>>", self._on_lang)
+        self.chk_update = self._reg(ttk.Checkbutton(head, variable=self.var_update_check,
+                                                    command=self._on_update_toggle), "opt_update_check")
+        self.chk_update.grid(row=0, column=3, padx=(14, 0))
 
         # ---- files
         files = ttk.LabelFrame(root, padding=8)
@@ -286,12 +298,21 @@ class App:
         self.btn_run = self._reg(ttk.Button(bot, command=self.run), "btn_run")
         self.btn_run.grid(row=1, column=3, padx=(4, 0))
 
+        # ---- one-line "new version" notice at the very bottom (gridded only when there is one)
+        self.frm_update = tk.Frame(root, bg=UPDATE_BG, highlightthickness=1, highlightbackground=UPDATE_BORDER)
+        self.lbl_update = tk.Label(self.frm_update, bg=UPDATE_BG, anchor="w")
+        self.lbl_update.pack(side="left", fill="x", expand=True, padx=(10, 8), pady=4)
+        self.btn_update_later = self._reg(ttk.Button(self.frm_update, command=self._update_later), "btn_later")
+        self.btn_update_later.pack(side="right", padx=(4, 8), pady=4)
+        self.btn_update_open = self._reg(ttk.Button(self.frm_update, command=self._update_open), "btn_update")
+        self.btn_update_open.pack(side="right", pady=4)
+
         self._update_value_labels()
         self._update_nav()
         self._set_status("status_ready")
 
     def _apply_texts(self) -> None:
-        self.root.title(t("app_title"))
+        self.root.title(f"{t('app_title')} v{APP_VERSION}")
         for widget, key, attr in self._texts:
             try:
                 widget.configure(**{attr: t(key)})
@@ -305,7 +326,62 @@ class App:
             self.lbl_line.configure(text=t(self._line_key, **self._line_kwargs))
         if self._status_key:
             self._set_status(self._status_key, **self._status_kwargs)
+        if getattr(self, "_update_info", None) is not None:
+            self._show_update_notice()
         self._redraw_preview()
+
+    # ------------------------------------------------------------ new version notice
+    def _save_update_prefs(self) -> None:
+        settings = i18n.load_settings()
+        settings.update(dataclasses.asdict(self.update_prefs))
+        i18n.save_settings(settings)
+
+    def _on_update_result(self, info: update_check.UpdateInfo | None, answered: bool) -> None:
+        """Tk thread. The day is recorded only when the server answered, so an offline
+        start asks again next time."""
+        if self._closing:
+            return
+        if answered:
+            self.update_prefs.update_check_last = update_check.today()
+            self._save_update_prefs()
+        if info is not None and self.var_update_check.get():
+            self._update_info = info
+            self._show_update_notice()
+
+    def _show_update_notice(self) -> None:
+        info = self._update_info
+        if info is None:
+            self.frm_update.grid_remove()
+            return
+        self.lbl_update.configure(text=t("update_available", latest=info.latest, current=info.current))
+        if not self.frm_update.winfo_manager():
+            self.frm_update.grid(row=5, column=0, sticky="ew", padx=12, pady=(0, 10))
+
+    def _hide_update_notice(self) -> None:
+        self._update_info = None
+        self.frm_update.grid_remove()
+
+    def _update_open(self) -> None:
+        """The tools page, never a download: the site serves the download."""
+        info = self._update_info
+        if info is not None and info.url.startswith(update_check.SITE):
+            try:
+                webbrowser.open(info.url)
+            except Exception:
+                pass
+        self._hide_update_notice()
+
+    def _update_later(self) -> None:
+        if self._update_info is not None:
+            self.update_prefs.update_check_skipped = self._update_info.latest  # a newer one is shown again
+            self._save_update_prefs()
+        self._hide_update_notice()
+
+    def _on_update_toggle(self) -> None:
+        self.update_prefs.update_check = bool(self.var_update_check.get())
+        self._save_update_prefs()
+        if not self.update_prefs.update_check:
+            self._hide_update_notice()
 
     # ------------------------------------------------------------ helpers
     def _set_status(self, key: str, **kwargs) -> None:

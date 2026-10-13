@@ -14,6 +14,7 @@ import sys
 import i18n
 import split
 from i18n import t
+from version import APP_VERSION
 
 
 def _interactive() -> bool:
@@ -96,6 +97,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("-y", "--yes", action="store_true", help=t("cli_yes"))
     p.add_argument("--lang", choices=i18n.LANGS, help=t("cli_lang"))
     p.add_argument("--gui", action="store_true", help=t("cli_gui"))
+    p.add_argument("--version", action="version", version=f"scan-pdf-split {APP_VERSION}", help=t("cli_version"))
     return p
 
 
