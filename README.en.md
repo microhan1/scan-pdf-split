@@ -60,7 +60,7 @@ When a newer version exists, a one-line notice appears at the bottom of the wind
 
 - Chaekgalpi Tools: [Scan PDF Cleanup](https://github.com/microhan1/scan-pdf-cleanup) · [Margin Crop](https://github.com/microhan1/TrimPDF)
 - Browser version, nothing to install: [Spread Split](https://microhan1.github.io/spread-split/)
-- [Chaekgalpi Library](https://chaekgalpi.co.kr/tools/scanpdfsplit?utm_source=github&utm_medium=referral&utm_campaign=tool_cta&utm_content=scanpdfsplit) — a web service for logging the books you read and writing reviews (Korean only)
+- [Chaekgalpi Library](https://chaekgalpi.co.kr/en/tools/scanpdfsplit?utm_source=github&utm_medium=referral&utm_campaign=tool_cta&utm_content=scanpdfsplit) — a web service for logging the books you read and writing reviews (tools page in English; the reading-log service itself is in Korean)
 
 ## License
 
