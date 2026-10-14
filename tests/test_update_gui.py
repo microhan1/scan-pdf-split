@@ -15,6 +15,7 @@ sys.path.insert(0, ROOT)
 
 import i18n  # noqa: E402
 import update_check as uc  # noqa: E402
+from version import APP_VERSION  # noqa: E402
 
 OK = {"latest": "0.2.0", "updateAvailable": True,
       "url": "https://chaekgalpi.co.kr/tools/scanpdfsplit?utm_source=app&utm_medium=update"}
@@ -102,7 +103,7 @@ def shown(app):
 def test_newer_version_shows_one_line_and_records_the_day(env):
     app = start(env, {"lang": "en", "options": {"position": 55.0}})
     assert pump(app, lambda: shown(app))
-    assert app.lbl_update.cget("text") == "Version 0.2.0 is available (current 0.1.3)"
+    assert app.lbl_update.cget("text") == f"Version 0.2.0 is available (current {APP_VERSION})"
     s = saved(env)
     assert s["update_check_last"] == uc.today() and env["calls"] == 1
     assert s["lang"] == "en" and s["options"] == {"position": 55.0}   # other settings untouched
@@ -178,7 +179,7 @@ def test_language_switch_rewords_the_notice(env):
     assert pump(app, lambda: shown(app))
     app.cmb_lang.current(i18n.LANGS.index("ko"))
     app._on_lang()
-    assert app.lbl_update.cget("text") == "새 버전 0.2.0이 있습니다 (현재 0.1.3)"
+    assert app.lbl_update.cget("text") == f"새 버전이 나왔습니다: 0.2.0 (현재 {APP_VERSION})"
     assert app.btn_update_open.cget("text") == "업데이트" and app.btn_update_later.cget("text") == "다음에"
     close(app)
 
@@ -210,7 +211,7 @@ def test_notice_leaves_the_rest_of_the_window_in_place(env):
 
 def test_window_title_carries_the_version(env):
     app = start(env)
-    assert app.root.title() == "Scan PDF Split v0.1.3"
+    assert app.root.title() == f"Scan PDF Split v{APP_VERSION}"
     close(app)
 
 

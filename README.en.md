@@ -46,7 +46,7 @@ When a newer version exists, a one-line notice appears at the bottom of the wind
 
 ![Update notice](docs/update_notice.png)
 
-*Picture: the notice line at the bottom of the window, in Korean "새 버전 0.2.0이 있습니다 (현재 0.1.3)" (in English: "Version 0.2.0 is available (current 0.1.3)"), shown with a fake server answer (version 0.2.0) for this screenshot.*
+*Picture: the notice line at the bottom of the window, in Korean "새 버전이 나왔습니다: 0.2.0 (현재 0.1.4)" (in English: "Version 0.2.0 is available (current 0.1.4)"), shown with a fake server answer (version 0.2.0) for this screenshot.*
 
 ## What it does not do
 

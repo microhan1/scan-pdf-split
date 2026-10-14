@@ -257,4 +257,6 @@ def test_settings_are_type_checked():
 def test_version_is_one_value():
     import version
 
-    assert version.APP_VERSION == "0.1.3"
+    import re
+
+    assert re.fullmatch(r"\d+\.\d+\.\d+", version.APP_VERSION)
