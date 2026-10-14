@@ -127,6 +127,19 @@ def test_update_opens_the_tools_page_only(env):
     close(app)
 
 
+@pytest.mark.parametrize("lang, expect_en", [("ko", False), ("en", True), ("ja", True), ("zh-CN", True)])
+def test_update_opens_the_page_in_the_screen_language(env, lang, expect_en):
+    url_en = "https://chaekgalpi.co.kr/en/tools/scanpdfsplit?utm_source=app&utm_medium=update"
+    env["answer"] = dict(OK, urlEn=url_en)
+    i18n.init(lang)
+    app = start(env)
+    assert pump(app, lambda: shown(app))
+    app._update_open()
+    app.root.update()
+    assert env["opened"] == [url_en if expect_en else OK["url"]]
+    close(app)
+
+
 def test_offline_shows_nothing_and_keeps_the_day_open(env):
     env["answer"] = None
     app = start(env)

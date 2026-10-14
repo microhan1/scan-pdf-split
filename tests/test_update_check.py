@@ -213,6 +213,39 @@ def test_the_thread_holds_no_tk_object(monkeypatch):
     assert not any(x is root or x is on_result for x in held)
 
 
+# ------------------------------------------------------------------ which page [Update] opens
+URL_EN = "https://chaekgalpi.co.kr/en/tools/scanpdfsplit?utm_source=app&utm_medium=update"
+
+
+@pytest.mark.parametrize("lang, url_en, expect", [
+    ("ko", URL_EN, "url"),                                   # Korean screen: the Korean page
+    ("en", URL_EN, "url_en"),
+    ("ja", URL_EN, "url_en"),
+    ("zh-CN", URL_EN, "url_en"),
+    ("en", None, "url"),                                     # server sent null
+    ("en", "missing", "url"),                                # older server: no urlEn at all
+    ("en", "https://evil.example/en/tools/scanpdfsplit", "url"),
+    ("en", "http://chaekgalpi.co.kr/en/tools/scanpdfsplit", "url"),
+    ("en", 5, "url"),
+])
+def test_page_follows_the_screen_language(lang, url_en, expect):
+    data = dict(OK) if url_en == "missing" else dict(OK, urlEn=url_en)
+    info = uc.interpret(data, "0.1.3")
+    assert uc.page_for(info, lang) == (OK["url"] if expect == "url" else URL_EN)
+
+
+def test_request_is_unchanged_by_the_english_page():
+    """urlEn only changes which page opens; what is sent stays slug, version and os."""
+    seen = {}
+
+    def opener(req, timeout):
+        seen["url"] = req.full_url
+        return FakeResp(json.dumps(dict(OK, urlEn=URL_EN)).encode())
+
+    uc.fetch("scanpdfsplit", "0.1.3", opener=opener)
+    assert urllib.parse.parse_qs(urllib.parse.urlsplit(seen["url"]).query) == {"v": ["0.1.3"], "os": ["win"]}
+
+
 # ------------------------------------------------------------------ settings
 def test_settings_are_type_checked():
     p = uc.prefs_from_settings({"update_check": "no", "update_check_last": 20261013, "update_check_skipped": ["0.2.0"]})

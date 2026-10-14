@@ -29,7 +29,8 @@ MAX_BYTES = 64 * 1024
 class UpdateInfo:
     latest: str
     current: str
-    url: str
+    url: str                        # the tool's page on the 책갈피 site (Korean)
+    url_en: str | None = None       # the same page in English, when the server offers one
 
 
 @dataclasses.dataclass
@@ -87,7 +88,17 @@ def interpret(data: dict | None, version: str, skipped: str = "") -> UpdateInfo 
     latest = latest.strip()
     if latest == (skipped or "").strip():
         return None
-    return UpdateInfo(latest, version, url)
+    url_en = data.get("urlEn")
+    url_en = url_en if isinstance(url_en, str) and url_en.startswith(SITE) else None
+    return UpdateInfo(latest, version, url, url_en)
+
+
+def page_for(info: UpdateInfo, lang: str) -> str:
+    """The page [Update] opens: Korean screens get the Korean page; every other
+    language gets the English page when the server gave one on the tools site."""
+    if lang != "ko" and info.url_en and info.url_en.startswith(SITE):
+        return info.url_en
+    return info.url
 
 
 def check_async(root, slug: str, version: str, prefs, on_result: Callable[[UpdateInfo | None, bool], None], *,
