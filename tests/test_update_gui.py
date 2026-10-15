@@ -222,6 +222,11 @@ import i18n
 i18n.SETTINGS_PATH = os.path.join(tempfile.mkdtemp(), "settings.json")
 i18n.init("en")
 import gui, update_check as uc
+import urllib.error, urllib.request
+def _blocked(*a, **k):    # this child process must not reach the server either
+    raise urllib.error.URLError("network blocked in tests")
+urllib.request.urlopen = _blocked
+uc.fetch.__kwdefaults__["opener"] = _blocked
 def slow(slug, version):
     time.sleep(1.5)          # the request is still out when the window closes
     return {{"latest": "0.2.0", "updateAvailable": True, "url": "https://chaekgalpi.co.kr/tools/scanpdfsplit"}}
