@@ -48,6 +48,14 @@ python main.py book.pdf --no-auto --position 52
 
 *그림: 창 아래의 「새 버전이 나왔습니다: 0.2.0 (현재 0.1.4)」 알림 줄. 서버 응답을 가짜(새 버전 0.2.0)로 넣어 띄운 시험 화면입니다.*
 
+## 의견 보내기
+
+안 되는 것·불편한 것·바라는 기능은 프로그램 창 위쪽의 **의견 보내기**를 누르거나 https://chaekgalpi.co.kr/tools/scanpdfsplit#feedback 에서 로그인 없이 보낼 수 있습니다. 누르면 브라우저로 책갈피 툴 페이지의 의견 칸이 열릴 뿐, 프로그램이 서버로 보내는 것은 없습니다. [GitHub Issues](https://github.com/microhan1/scan-pdf-split/issues)도 그대로 받습니다.
+
+![의견 보내기 링크](docs/feedback_link.png)
+
+*그림: 창 위쪽 「새 버전 확인」 체크 옆의 「의견 보내기」 링크.*
+
 ## 하지 않는 것
 
 - OCR은 하지 않습니다. 글자 검색이 되는 PDF는 나눈 뒤에도 검색되지만, 옆 쪽 글자가 함께 걸릴 수 있습니다.

@@ -34,6 +34,7 @@ MIN_SIZE = (960, 540)                # narrower cuts the page-navigation row
 FRAME_W, FRAME_H = 16, 40            # window borders and title bar around the client area
 LINE_COLOR = "#e5484d"
 UPDATE_BG, UPDATE_BORDER = "#eff6ff", "#bfdbfe"   # the new-version notice line
+LINK_COLOR = "#1d4ed8"               # the "Send feedback" link in the header
 POSITION_SLIDER = (30.0, 70.0)       # the slider; the CLI accepts split.POSITION_RANGE
 DEFAULT_PAGE_SECONDS = 0.02          # used for the large-file estimate before any preview
 
@@ -137,6 +138,11 @@ class App:
         self.chk_update = self._reg(ttk.Checkbutton(head, variable=self.var_update_check,
                                                     command=self._on_update_toggle), "opt_update_check")
         self.chk_update.grid(row=0, column=3, padx=(14, 0))
+        ttk.Style().configure("Link.TLabel", foreground=LINK_COLOR)
+        self.lnk_feedback = self._reg(ttk.Label(head, style="Link.TLabel", cursor="hand2",
+                                                font=("", 9, "underline")), "btn_feedback")
+        self.lnk_feedback.grid(row=0, column=4, padx=(14, 0))
+        self.lnk_feedback.bind("<Button-1>", lambda e: self._send_feedback())
 
         # ---- files
         files = ttk.LabelFrame(root, padding=8)
@@ -383,6 +389,19 @@ class App:
         self._save_update_prefs()
         if not self.update_prefs.update_check:
             self._hide_update_notice()
+
+    # ------------------------------------------------------------ feedback
+    def _send_feedback(self) -> None:
+        """Open the feedback box on the tools page; nothing is sent from here. When no
+        browser opens, show the address so it can be copied."""
+        url = update_check.feedback_url(update_check.SLUG, APP_VERSION, i18n.current_lang())
+        try:
+            opened = webbrowser.open(url)
+        except Exception:
+            opened = False
+        if not opened:
+            self.log("err_feedback_open", url=url)
+            messagebox.showwarning(t("app_title"), t("err_feedback_open", url=url), parent=self.root)
 
     # ------------------------------------------------------------ helpers
     def _set_status(self, key: str, **kwargs) -> None:

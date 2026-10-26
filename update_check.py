@@ -101,6 +101,17 @@ def page_for(info: UpdateInfo, lang: str) -> str:
     return info.url
 
 
+def feedback_url(slug: str, version: str | None, lang: str | None) -> str:
+    """The feedback box on the tool's page. Only opened in the browser, never requested
+    here. en/ja/zh-CN get the English page (there is no Japanese or Chinese one);
+    ko and anything unknown get the Korean page. An empty version leaves v out."""
+    prefix = "en/" if (lang or "").lower() in ("en", "ja", "zh-cn") else ""
+    query = "utm_source=app&utm_medium=feedback"
+    if version and version.strip():
+        query += "&v=" + urllib.parse.quote(version, safe="")
+    return f"{SITE}{prefix}tools/{slug}?{query}#feedback"
+
+
 def check_async(root, slug: str, version: str, prefs, on_result: Callable[[UpdateInfo | None, bool], None], *,
                 fetcher: Callable = fetch, day: str | None = None) -> bool:
     """Schedule one check DELAY_MS after now. on_result(info, answered) runs on the Tk

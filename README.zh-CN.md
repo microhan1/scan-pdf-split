@@ -48,6 +48,14 @@ python main.py book.pdf --no-auto --position 52
 
 *图：窗口底部的提示行，韩文界面显示「새 버전이 나왔습니다: 0.2.0 (현재 0.1.4)」（中文为「有新版本 0.2.0（当前 0.1.4）」）。截图时使用了伪造的服务器应答（新版本 0.2.0）。*
 
+## 发送反馈
+
+遇到问题、不方便之处或想要的功能，可点窗口上方的 **发送反馈**，或前往 https://chaekgalpi.co.kr/en/tools/scanpdfsplit#feedback，无需登录即可提交。点击后只是在浏览器中打开书签工具页面的反馈栏，程序本身不向服务器发送任何内容。[GitHub Issues](https://github.com/microhan1/scan-pdf-split/issues) 也照常接收。
+
+![发送反馈链接](docs/feedback_link.png)
+
+*图：窗口上方「새 버전 확인」复选框旁的「의견 보내기」链接（韩文界面；中文为「检查新版本」「发送反馈」）。*
+
 ## 不做的事
 
 - 不做 OCR。可搜索的 PDF 拆分后仍可搜索，但可能同时搜到相邻页的文字。

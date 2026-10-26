@@ -48,6 +48,14 @@ When a newer version exists, a one-line notice appears at the bottom of the wind
 
 *Picture: the notice line at the bottom of the window, in Korean "새 버전이 나왔습니다: 0.2.0 (현재 0.1.4)" (in English: "Version 0.2.0 is available (current 0.1.4)"), shown with a fake server answer (version 0.2.0) for this screenshot.*
 
+## Feedback
+
+To report what is broken or missing, click **Send feedback** at the top of the window, or go to https://chaekgalpi.co.kr/en/tools/scanpdfsplit#feedback — no sign-in needed. The link only opens the feedback box on the tool's page in your browser; the app itself sends nothing. [GitHub Issues](https://github.com/microhan1/scan-pdf-split/issues) are welcome as well.
+
+![Send feedback link](docs/feedback_link.png)
+
+*Picture: the 「의견 보내기」 link next to the 「새 버전 확인」 box at the top of the window (Korean screen; in English: "Send feedback" and "Check for updates").*
+
 ## What it does not do
 
 - No OCR. A searchable PDF stays searchable, but a search may also hit words from the neighbouring page.
