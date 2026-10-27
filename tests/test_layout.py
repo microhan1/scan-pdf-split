@@ -128,7 +128,10 @@ def test_feedback_note_stays_inside_the_window(make_app, lang, size, monkeypatch
     app.root.geometry(size)
     pump(app, lambda: False, timeout=0.5)
     app.lnk_feedback.event_generate("<Enter>", x=2, y=2)
-    assert pump(app, lambda: app.tip_feedback.tip is not None and app.tip_feedback.tip.winfo_ismapped())
+    # The note window can be mapped before the label inside it is laid out (width 1),
+    # so wait for both to have their real size before measuring.
+    assert pump(app, lambda: app.tip_feedback.tip is not None and app.tip_feedback.tip.winfo_ismapped()
+                and app.tip_feedback.tip.winfo_width() > 1 and app.tip_feedback.label.winfo_width() > 1)
     tip, label, root = app.tip_feedback.tip, app.tip_feedback.label, app.root
     tip.update_idletasks()
     x, y, w, h = tip.winfo_rootx(), tip.winfo_rooty(), tip.winfo_width(), tip.winfo_height()

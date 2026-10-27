@@ -261,7 +261,9 @@ def test_other_keys_do_nothing(env):
 # ------------------------------------------------------------ b. the note under the link
 def hover(app):
     app.lnk_feedback.event_generate("<Enter>", x=2, y=2)
-    return wait(app, lambda: app.tip_feedback.tip is not None and app.tip_feedback.tip.winfo_ismapped())
+    # mapped is not enough: the label inside can still be width 1 for a moment
+    return wait(app, lambda: app.tip_feedback.tip is not None and app.tip_feedback.tip.winfo_ismapped()
+                and app.tip_feedback.tip.winfo_width() > 1 and app.tip_feedback.label.winfo_width() > 1)
 
 
 def test_note_appears_on_hover_and_goes_on_leave(env):
