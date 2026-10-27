@@ -116,3 +116,26 @@ def test_nothing_is_cut_off(make_app, lang, notice):
         pump(app, lambda: False, timeout=0.5)
         found = problems(app)
         assert not found, f"{lang} {size}: " + "; ".join(found)
+
+
+@pytest.mark.parametrize("lang", i18n.LANGS)
+@pytest.mark.parametrize("size", ["1120x800", "960x540"])
+def test_feedback_note_stays_inside_the_window(make_app, lang, size, monkeypatch):
+    import gui
+
+    monkeypatch.setattr(gui.Tooltip, "DELAY_MS", 10)
+    app = make_app(lang, False)
+    app.root.geometry(size)
+    pump(app, lambda: False, timeout=0.5)
+    app.lnk_feedback.event_generate("<Enter>", x=2, y=2)
+    assert pump(app, lambda: app.tip_feedback.tip is not None and app.tip_feedback.tip.winfo_ismapped())
+    tip, label, root = app.tip_feedback.tip, app.tip_feedback.label, app.root
+    tip.update_idletasks()
+    x, y, w, h = tip.winfo_rootx(), tip.winfo_rooty(), tip.winfo_width(), tip.winfo_height()
+    assert label.cget("text") == i18n.t("tip_feedback") and label.winfo_reqwidth() <= label.winfo_width() + 1
+    assert root.winfo_rootx() <= x and x + w <= root.winfo_rootx() + root.winfo_width(), f"{lang} {size}"
+    assert root.winfo_rooty() <= y and y + h <= root.winfo_rooty() + root.winfo_height(), f"{lang} {size}"
+    assert 0 <= x and x + w <= root.winfo_screenwidth() and 0 <= y and y + h <= root.winfo_screenheight()
+    app.lnk_feedback.event_generate("<Leave>", x=2, y=2)
+    pump(app, lambda: app.tip_feedback.tip is None, timeout=1)
+    assert app.tip_feedback.tip is None

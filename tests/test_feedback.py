@@ -35,9 +35,10 @@ def test_address_per_language(lang, expect):
     assert uc.feedback_url("scanpdfsplit", "0.2.1", lang) == expect
 
 
-@pytest.mark.parametrize("lang", [None, "", "fr", "de", "zh-TW", "kor", "english"])
-def test_unknown_language_gets_the_korean_page(lang):
-    assert uc.feedback_url("scanpdfsplit", "0.2.1", lang) == KO
+@pytest.mark.parametrize("lang", [None, "", "fr", "de", "zh-TW", "english"])
+def test_unknown_language_gets_the_english_page(lang):
+    """Series rule of 2026-10-27: only ko... is Korean; no language means the default (en)."""
+    assert uc.feedback_url("scanpdfsplit", "0.2.1", lang) == EN
 
 
 @pytest.mark.parametrize("lang", ["EN", "En", "JA", "zh-cn", "ZH-CN"])

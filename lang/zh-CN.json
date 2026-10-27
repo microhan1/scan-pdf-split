@@ -7,6 +7,7 @@
   "btn_update": "更新",
   "btn_later": "以后",
   "btn_feedback": "发送反馈",
+  "tip_feedback": "告诉我们问题或建议（将打开浏览器）",
   "err_feedback_open": "无法打开浏览器。请复制下面的地址，粘贴到浏览器的地址栏。\n{url}",
   "lbl_files": "文件列表",
   "btn_add_files": "添加文件",

@@ -35,6 +35,7 @@ FRAME_W, FRAME_H = 16, 40            # window borders and title bar around the c
 LINE_COLOR = "#e5484d"
 UPDATE_BG, UPDATE_BORDER = "#eff6ff", "#bfdbfe"   # the new-version notice line
 LINK_COLOR = "#1d4ed8"               # the "Send feedback" link in the header
+TIP_BG, TIP_BORDER = "#ffffe1", "#767676"         # the small note under the link
 POSITION_SLIDER = (30.0, 70.0)       # the slider; the CLI accepts split.POSITION_RANGE
 DEFAULT_PAGE_SECONDS = 0.02          # used for the large-file estimate before any preview
 
@@ -61,6 +62,81 @@ def _saved_options(settings: dict) -> Options:
     # the slider cannot show a line outside its own range
     opts.position = min(POSITION_SLIDER[1], max(POSITION_SLIDER[0], opts.position))
     return opts
+
+
+class Tooltip:
+    """A small note under a widget while the mouse is over it; tkinter only. The text
+    is looked up on every show, so it follows the language switch."""
+
+    DELAY_MS = 500
+    WRAP = 320
+
+    def __init__(self, widget: tk.Misc, key: str) -> None:
+        self.widget, self.key = widget, key
+        self.tip: tk.Toplevel | None = None
+        self.label: tk.Label | None = None
+        self._job: str | None = None
+        widget.bind("<Enter>", lambda e: self._schedule(), add="+")
+        for seq in ("<Leave>", "<ButtonPress>", "<Destroy>"):
+            widget.bind(seq, lambda e: self.hide(), add="+")
+
+    @property
+    def text(self) -> str:
+        return t(self.key)
+
+    def _schedule(self) -> None:
+        self._cancel()
+        self._job = self.widget.after(self.DELAY_MS, self.show)
+
+    def _cancel(self) -> None:
+        if self._job is not None:
+            try:
+                self.widget.after_cancel(self._job)
+            except tk.TclError:
+                pass
+            self._job = None
+
+    def show(self) -> None:
+        self._job = None
+        if self.tip is None:
+            self.tip = tk.Toplevel(self.widget)
+            self.tip.wm_overrideredirect(True)
+            self.tip.wm_attributes("-topmost", True)
+            self.label = tk.Label(self.tip, justify="left", background=TIP_BG, relief="solid", borderwidth=1,
+                                  highlightthickness=0, padx=6, pady=3, wraplength=self.WRAP)
+            self.label.pack()
+        self.label.configure(text=self.text)
+        self.place()
+
+    def place(self) -> None:
+        """Right edge under the widget's right edge, then pulled inside the window and
+        the screen, so a narrow window or a link near the edge never cuts the note."""
+        w, tip = self.widget, self.tip
+        tip.update_idletasks()
+        tw, th = tip.winfo_reqwidth(), tip.winfo_reqheight()
+        x, y = w.winfo_rootx() + w.winfo_width() - tw, w.winfo_rooty() + w.winfo_height() + 4
+        top = w.winfo_toplevel()
+        left, right = top.winfo_rootx(), top.winfo_rootx() + top.winfo_width()
+        if tw <= right - left:
+            x = min(max(x, left), right - tw)
+        x = min(max(x, 0), w.winfo_screenwidth() - tw)
+        y = min(max(y, 0), w.winfo_screenheight() - th)
+        tip.wm_geometry(f"+{x}+{y}")
+
+    def refresh(self) -> None:
+        """After a language switch: new words in the note that is showing."""
+        if self.tip is not None and self.label is not None:
+            self.label.configure(text=self.text)
+            self.place()
+
+    def hide(self) -> None:
+        self._cancel()
+        if self.tip is not None:
+            try:
+                self.tip.destroy()
+            except tk.TclError:
+                pass
+            self.tip = self.label = None
 
 
 class App:
@@ -139,10 +215,19 @@ class App:
                                                     command=self._on_update_toggle), "opt_update_check")
         self.chk_update.grid(row=0, column=3, padx=(14, 0))
         ttk.Style().configure("Link.TLabel", foreground=LINK_COLOR)
-        self.lnk_feedback = self._reg(ttk.Label(head, style="Link.TLabel", cursor="hand2",
-                                                font=("", 9, "underline")), "btn_feedback")
-        self.lnk_feedback.grid(row=0, column=4, padx=(14, 0))
+        # A focus stop after the checkbox: Tab reaches it, Enter or Space opens it, and a
+        # frame drawn while it has focus shows where the focus is (the border is always
+        # there, flat when unfocused, so the header does not shift).
+        self.lnk_feedback = self._reg(ttk.Label(head, style="Link.TLabel", cursor="hand2", takefocus=True,
+                                                font=("", 9, "underline"), borderwidth=1, relief="flat",
+                                                padding=(2, 0)), "btn_feedback")
+        self.lnk_feedback.grid(row=0, column=4, padx=(12, 0))
         self.lnk_feedback.bind("<Button-1>", lambda e: self._send_feedback())
+        for seq in ("<Return>", "<KP_Enter>", "<space>"):
+            self.lnk_feedback.bind(seq, lambda e: (self._send_feedback(), "break")[1])
+        self.lnk_feedback.bind("<FocusIn>", lambda e: self.lnk_feedback.configure(relief="solid"))
+        self.lnk_feedback.bind("<FocusOut>", lambda e: self.lnk_feedback.configure(relief="flat"))
+        self.tip_feedback = Tooltip(self.lnk_feedback, "tip_feedback")
 
         # ---- files
         files = ttk.LabelFrame(root, padding=8)
@@ -334,6 +419,7 @@ class App:
             self._set_status(self._status_key, **self._status_kwargs)
         if getattr(self, "_update_info", None) is not None:
             self._show_update_notice()
+        self.tip_feedback.refresh()
         self._redraw_preview()
 
     # ------------------------------------------------------------ new version notice
@@ -394,6 +480,7 @@ class App:
     def _send_feedback(self) -> None:
         """Open the feedback box on the tools page; nothing is sent from here. When no
         browser opens, show the address so it can be copied."""
+        self.tip_feedback.hide()                       # the note would otherwise linger over the browser
         url = update_check.feedback_url(update_check.SLUG, APP_VERSION, i18n.current_lang())
         try:
             opened = webbrowser.open(url)

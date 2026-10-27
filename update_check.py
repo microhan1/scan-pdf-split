@@ -16,6 +16,8 @@ import urllib.parse
 import urllib.request
 from typing import Callable
 
+import i18n
+
 API = "https://chaekgalpi.co.kr/api/tools/{slug}/latest"
 SITE = "https://chaekgalpi.co.kr/"  # the notice only ever opens a page on this site
 SLUG = "scanpdfsplit"               # this tool's name on the 책갈피 tools site
@@ -93,19 +95,27 @@ def interpret(data: dict | None, version: str, skipped: str = "") -> UpdateInfo 
     return UpdateInfo(latest, version, url, url_en)
 
 
-def page_for(info: UpdateInfo, lang: str) -> str:
+def is_korean(lang: str | None) -> bool:
+    """Which page a screen language gets, the same rule across the series: codes that
+    start with "ko" (ko, ko-KR) get the Korean page, every other code - en, ja, zh-CN,
+    zh-TW, fr, anything unknown - the English one (there is no Japanese or Chinese
+    page). No language at all means this tool's default screen language, English."""
+    code = (lang or "").strip() or i18n.DEFAULT_LANG
+    return code.lower().startswith("ko")
+
+
+def page_for(info: UpdateInfo, lang: str | None) -> str:
     """The page [Update] opens: Korean screens get the Korean page; every other
     language gets the English page when the server gave one on the tools site."""
-    if lang != "ko" and info.url_en and info.url_en.startswith(SITE):
+    if not is_korean(lang) and info.url_en and info.url_en.startswith(SITE):
         return info.url_en
     return info.url
 
 
 def feedback_url(slug: str, version: str | None, lang: str | None) -> str:
     """The feedback box on the tool's page. Only opened in the browser, never requested
-    here. en/ja/zh-CN get the English page (there is no Japanese or Chinese one);
-    ko and anything unknown get the Korean page. An empty version leaves v out."""
-    prefix = "en/" if (lang or "").lower() in ("en", "ja", "zh-cn") else ""
+    here. The language picks the page as in is_korean(). An empty version leaves v out."""
+    prefix = "" if is_korean(lang) else "en/"
     query = "utm_source=app&utm_medium=feedback"
     if version and version.strip():
         query += "&v=" + urllib.parse.quote(version, safe="")
