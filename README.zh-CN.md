@@ -50,7 +50,7 @@ python main.py book.pdf --no-auto --position 52
 
 ## 发送反馈
 
-遇到问题、不方便之处或想要的功能，可点窗口上方的 **发送反馈**，或前往 https://chaekgalpi.co.kr/en/tools/scanpdfsplit#feedback，无需登录即可提交。点击后只是在浏览器中打开书签工具页面的反馈栏，程序本身不向服务器发送任何内容。[GitHub Issues](https://github.com/microhan1/scan-pdf-split/issues) 也照常接收。
+遇到问题、不方便之处或想要的功能，可点窗口上方的 **发送反馈**，或前往[书签工具页面的反馈栏](https://chaekgalpi.co.kr/en/tools/scanpdfsplit#feedback)，无需登录即可提交。点击后只是在浏览器中打开书签工具页面的反馈栏，程序本身不向服务器发送任何内容。[GitHub Issues](https://github.com/microhan1/scan-pdf-split/issues) 也照常接收。
 
 ![发送反馈链接](docs/feedback_link.png)
 
