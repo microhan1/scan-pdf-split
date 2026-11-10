@@ -3,6 +3,10 @@
     python tests/measure_startup.py dist\\scan-pdf-split.exe [runs=3]
 
 Not a test (pytest does not collect it); run it by hand before a release.
+- The exe runs where it is: a copy in a new folder is a new file to the
+  antivirus and its first start pays a 15-20 s scan. For the same reason one
+  warm-up run comes first and is not counted. The app writes settings.json
+  beside the exe only when closed normally, and the runs here are killed.
 - The internet is cut off with a dead proxy, so the start-up update check
   cannot reach the server; APPDATA and TEMP point at a temporary folder, so
   the user's settings stay untouched and the _MEI* folder a forced kill
@@ -99,18 +103,14 @@ def windows_of(pids: set[int]) -> list[dict]:
 def measure(exe: str, limit: float = 90.0) -> dict:
     root = tempfile.mkdtemp(prefix="scanpdfsplit_measure_")
     tmp = os.path.join(root, "tmp")
-    app_dir = os.path.join(root, "app")
     os.makedirs(tmp)
-    os.makedirs(app_dir)
-    exe_copy = os.path.join(app_dir, os.path.basename(exe))
-    shutil.copy2(exe, exe_copy)                 # settings.json is written beside the exe, so run a copy
     env = dict(os.environ, HTTP_PROXY=DEAD_PROXY, HTTPS_PROXY=DEAD_PROXY, http_proxy=DEAD_PROXY,
                https_proxy=DEAD_PROXY, NO_PROXY="", APPDATA=os.path.join(root, "appdata"),
                LOCALAPPDATA=os.path.join(root, "appdata"), TEMP=tmp, TMP=tmp)
     res = dict(splash=None, window=None, splash_gone=None, tasks_max=0, tasks_after=None, leftover=None,
                splash_info=None, mei=0)
     t0 = time.perf_counter()
-    proc = subprocess.Popen([exe_copy], env=env, cwd=app_dir)
+    proc = subprocess.Popen([exe], env=env, cwd=os.path.dirname(os.path.abspath(exe)))
     try:
         pids, last_family, settled = family(proc.pid), 0.0, None
         while time.perf_counter() - t0 < limit:
@@ -148,6 +148,8 @@ def main() -> None:
     exe = sys.argv[1]
     runs = int(sys.argv[2]) if len(sys.argv) > 2 else 3
     print(f"{exe}  ({os.path.getsize(exe) / 1024 / 1024:.1f}MB)")
+    warm = measure(exe)
+    print(f"예열(세지 않음): 창 {fmt(warm['window'])}초")
     print("회 | 시작 그림(초) | 창(초) | 시작 그림 사라짐(초) | 작업 표시줄 최대 | 창 뜬 뒤 1.5초: 칸 | 남은 시작 그림 | _MEI")
     rows = []
     for k in range(1, runs + 1):
