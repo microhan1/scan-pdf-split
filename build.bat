@@ -9,6 +9,7 @@ python -m pip install -r requirements.txt
 
 python -m PyInstaller --noconfirm --clean --onefile --windowed ^
   --name scan-pdf-split ^
+  --splash assets\splash.png ^
   --add-data "lang;lang" ^
   --collect-data tkinterdnd2 ^
   main.py

@@ -19,16 +19,65 @@ import time
 from dataclasses import dataclass, field
 from typing import Callable, Optional
 
-import numpy as np
-import pymupdf
-from PIL import Image
-
 log = logging.getLogger("scan_pdf_split")
 
-# MuPDF prints its own "MuPDF error: ..." lines for damaged files. Every
-# failure is reported here in the user's language, so keep the console clean.
-pymupdf.TOOLS.mupdf_display_errors(False)
-pymupdf.TOOLS.mupdf_display_warnings(False)
+
+class _Deferred:
+    """Stands in for numpy, pymupdf and PIL.Image until load_heavy() has
+    imported them. Reading any attribute imports the real modules first, and
+    waits while another thread is importing them, so a file dropped in the
+    moment the window opens is handled exactly like one dropped later."""
+
+    def __init__(self, name: str) -> None:
+        self._name = name
+
+    def __getattr__(self, attr: str):
+        load_heavy()
+        return getattr(_heavy[self._name], attr)
+
+
+# Importing numpy and pymupdf takes about half a second from source and a few
+# seconds from the one-file exe, so this module does not import them. The GUI
+# opens its window first and imports them on a background thread; the CLI
+# imports them when it opens its first file.
+np = _Deferred("np")
+pymupdf = _Deferred("pymupdf")
+Image = _Deferred("Image")
+_heavy: dict[str, object] = {}       # filled by load_heavy(); empty means not loaded yet
+_heavy_lock = threading.Lock()
+
+
+def load_heavy() -> None:
+    """Import numpy, pymupdf and PIL.Image and put the real modules where the
+    stand-ins are. Waits if another thread is already importing them. An
+    import error is raised again on every call, so the front end can report
+    it when the file is actually used."""
+    global np, pymupdf, Image
+    if _heavy:
+        return
+    with _heavy_lock:
+        if _heavy:
+            return
+        import numpy
+        import pymupdf as _pymupdf
+        from PIL import Image as _Image
+
+        # MuPDF prints its own "MuPDF error: ..." lines for damaged files. Every
+        # failure is reported here in the user's language, so keep the console clean.
+        _pymupdf.TOOLS.mupdf_display_errors(False)
+        _pymupdf.TOOLS.mupdf_display_warnings(False)
+        _heavy.update(np=numpy, pymupdf=_pymupdf, Image=_Image)
+        np, pymupdf, Image = numpy, _pymupdf, _Image
+
+
+def preload_heavy() -> None:
+    """For a background thread started once the window is up. A failure is
+    left for the first real use, which reports it to the user."""
+    try:
+        load_heavy()
+    except Exception:
+        log.debug("preloading numpy/pymupdf failed; the first use will report it", exc_info=True)
+
 
 DIRECTIONS = ("ltr", "rtl")          # which half comes first
 SELECTS = ("auto", "all", "none")    # which pages are split by default
@@ -129,6 +178,7 @@ class FileResult:
 def open_pdf(path: str, password: Optional[str] = None) -> pymupdf.Document:
     """Open a PDF read-only. Raises PasswordRequired if it is encrypted and
     the password is missing or wrong. Never writes to ``path``."""
+    load_heavy()                      # a file given right after the window opened waits here
     doc = pymupdf.open(path)
     if doc.needs_pass:
         if not password or not doc.authenticate(password):

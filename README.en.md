@@ -16,6 +16,8 @@ pip install -r requirements.txt
 python main.py
 ```
 
+- **Build the exe**: run `build.bat` (PyInstaller `--onefile --windowed --splash assets/splash.png`). The small picture shown while the exe starts is `assets/splash.png`; `assets/make_splash.py` redraws it.
+
 ## Usage
 
 ![The program window](docs/gui_en.png)

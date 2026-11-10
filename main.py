@@ -51,6 +51,18 @@ def _ask(prompt: str, secret: bool = False) -> str | None:
         return None
 
 
+def close_splash() -> None:
+    """Close the start-up picture the one-file exe shows while it unpacks and
+    starts Python (PyInstaller --splash, see build.bat). Run from source there
+    is no pyi_splash module and nothing happens."""
+    try:
+        import pyi_splash  # type: ignore[import-not-found]
+
+        pyi_splash.close()
+    except Exception:
+        pass
+
+
 def _preselect_lang(argv: list[str]) -> str | None:
     for i, a in enumerate(argv):
         if a == "--lang" and i + 1 < len(argv):
@@ -194,7 +206,11 @@ def main(argv: list[str] | None = None) -> int:
                 pass
     i18n.init(_preselect_lang(argv))
     parser = build_parser()
-    args = parser.parse_args(argv)
+    try:
+        args = parser.parse_args(argv)
+    except SystemExit:          # --help, --version or a bad option: its message must not hide behind the picture
+        close_splash()
+        raise
     if args.lang:
         i18n.set_lang(args.lang, persist=False)
     # A windowed exe has no console, so dropping files on it opens the GUI
@@ -203,8 +219,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.gui or headless or not args.inputs:
         import gui
 
-        gui.launch(args.inputs or None)
+        gui.launch(args.inputs or None, shown=close_splash)
         return 0
+    close_splash()              # the CLI writes to the console; no window is coming
     try:
         return run_cli(args)
     except KeyboardInterrupt:

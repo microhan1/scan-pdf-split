@@ -16,6 +16,8 @@ pip install -r requirements.txt
 python main.py
 ```
 
+- **生成 exe**：运行 `build.bat`（PyInstaller `--onefile --windowed --splash assets/splash.png`）。启动时短暂显示的小图片是 `assets/splash.png`，可用 `assets/make_splash.py` 重新生成。
+
 ## 使用方法
 
 ![程序界面](docs/gui_zh-CN.png)

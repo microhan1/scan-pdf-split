@@ -16,6 +16,8 @@ pip install -r requirements.txt
 python main.py
 ```
 
+- **exe を作る**：`build.bat` を実行します（PyInstaller `--onefile --windowed --splash assets/splash.png`）。起動時に少しだけ表示される小さな画像が `assets/splash.png` で、`assets/make_splash.py` で描き直せます。
+
 ## 使い方
 
 ![プログラム画面](docs/gui_ja.png)

@@ -16,6 +16,8 @@ pip install -r requirements.txt
 python main.py
 ```
 
+- **exe 만들기**: `build.bat` 을 실행합니다(PyInstaller `--onefile --windowed --splash assets/splash.png`). 켜자마자 잠깐 보이는 작은 시작 그림이 `assets/splash.png` 이고, `assets/make_splash.py` 로 다시 그릴 수 있습니다.
+
 ## 사용법
 
 ![프로그램 화면](docs/gui_ko.png)

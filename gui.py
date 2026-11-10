@@ -11,8 +11,7 @@ import time
 import tkinter as tk
 import webbrowser
 from tkinter import filedialog, messagebox, simpledialog, ttk
-
-from PIL import Image, ImageTk
+from typing import Callable
 
 import i18n
 import split
@@ -20,6 +19,10 @@ import update_check
 from i18n import t
 from version import APP_VERSION
 from split import Options
+
+# PIL.Image is imported with numpy and pymupdf after the window is up (see
+# split.load_heavy); until then this is split's stand-in, which waits for them.
+Image = split.Image
 
 try:
     from tkinterdnd2 import DND_FILES, TkinterDnD
@@ -156,7 +159,7 @@ class App:
         self.preview_index = 0
         self._preview: tuple[Image.Image, split.PagePlan, list[int | None]] | None = None
         self._orig_geom: tuple[int, int, int, int] | None = None
-        self._photos: list[ImageTk.PhotoImage] = []
+        self._photos: list = []     # ImageTk.PhotoImage, kept so Tk does not drop them
         self._texts: list[tuple[tk.Misc, str, str]] = []
         self._page_seconds = 0.0
         self._status_key = ""
@@ -882,6 +885,8 @@ class App:
     def _redraw_preview(self) -> None:
         if not self._preview:
             return
+        from PIL import ImageTk     # after split.load_heavy(); a few ms, and only the preview needs it
+
         image, plan, first_out = self._preview
         self._photos.clear()
         overlap = float(self.var_overlap.get()) / 100.0
@@ -1077,5 +1082,16 @@ class App:
         self.root.mainloop()
 
 
-def launch(initial_files: list[str] | None = None) -> None:
-    App(initial_files).mainloop()
+def launch(initial_files: list[str] | None = None, shown: Callable[[], None] | None = None) -> None:
+    """Open the window and run it. ``shown`` is called once the window is fully
+    drawn, or when opening it failed, so the exe's start-up picture (main.py)
+    never hides an error. numpy, pymupdf and PIL are imported on a background
+    thread from then on; a file used before they arrive waits for them."""
+    try:
+        app = App(initial_files)
+        app.root.update()               # everything drawn before the start-up picture goes
+    finally:
+        if shown is not None:
+            shown()
+    threading.Thread(target=split.preload_heavy, daemon=True, name="preload-heavy").start()
+    app.mainloop()
